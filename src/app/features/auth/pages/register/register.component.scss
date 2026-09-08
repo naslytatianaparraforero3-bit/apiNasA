@@ -1,0 +1,132 @@
+.auth-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #fbcfe8 0%, #e9d5ff 100%);
+  padding: 20px;
+}
+
+.auth-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 40px;
+  width: 100%;
+  max-width: 400px;
+  box-shadow: 0 10px 40px rgba(236, 72, 153, 0.15);
+  animation: fadeIn 0.6s ease;
+
+  h2 {
+    color: #db2777;
+    margin-bottom: 5px;
+    text-align: center;
+    font-size: 28px;
+  }
+
+  .subtitle {
+    text-align: center;
+    color: #f472b6;
+    margin-bottom: 30px;
+    font-size: 14px;
+  }
+}
+
+.form-group {
+  margin-bottom: 20px;
+
+  label {
+    display: block;
+    margin-bottom: 8px;
+    color: #6b7280;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 12px;
+    font-size: 15px;
+    background: #fdf2f8;
+    transition: all 0.3s ease;
+
+    &:focus {
+      outline: none;
+      border-color: #f472b6;
+      background: #ffffff;
+    }
+  }
+
+  small {
+    color: #f87171;
+    font-size: 12px;
+    margin-top: 5px;
+    display: block;
+  }
+}
+
+.error {
+  background: #fee2e2;
+  color: #dc2626;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+.success {
+  background: #dcfce7;
+  color: #16a34a;
+  padding: 10px 15px;
+  border-radius: 10px;
+  font-size: 14px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+
+button {
+  width: 100%;
+  padding: 14px;
+  background: linear-gradient(135deg, #f472b6 0%, #db2777 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(219, 39, 119, 0.3);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.link {
+  text-align: center;
+  margin-top: 20px;
+  color: #6b7280;
+  font-size: 14px;
+
+  a {
+    color: #db2777;
+    text-decoration: none;
+    font-weight: 600;
+
+    &:hover {
+      text-decoration: underline;
+    }
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
