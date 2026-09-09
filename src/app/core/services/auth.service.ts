@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 
@@ -25,11 +25,12 @@ export class AuthService {
   private readonly apiUrl = environment.apiUrl;
   private readonly accessTokenKey = 'access_token';
   private readonly refreshTokenKey = 'refresh_token';
+  private readonly userStorageKey = 'current_user';
 
-  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  private currentUserSubject = new BehaviorSubject<User | null>(this.getStoredUser());
   public currentUser$ = this.currentUserSubject.asObservable();
 
-  private isLoggedInSubject = new BehaviorSubject<boolean>(false);
+  private isLoggedInSubject = new BehaviorSubject<boolean>(!!this.getAccessToken());
   public isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
   constructor(private http: HttpClient) {
@@ -41,13 +42,15 @@ export class AuthService {
     if (token) {
       this.getMe().subscribe({
         next: (user) => {
-          this.currentUserSubject.next(user);
+          this.setCurrentUser(user);
           this.isLoggedInSubject.next(true);
         },
         error: () => {
           this.clearSession();
         }
       });
+    } else {
+      this.clearSession();
     }
   }
 
@@ -56,7 +59,7 @@ export class AuthService {
       .pipe(
         tap(response => this.saveSession(response)),
         catchError(error => {
-          const message = error.error?.error?.message || 'Error al iniciar sesión';
+          const message = error.error?.error?.message || error.error?.message || 'Error al iniciar sesión';
           return throwError(() => new Error(message));
         })
       );
@@ -67,21 +70,21 @@ export class AuthService {
       .pipe(
         tap(response => this.saveSession(response)),
         catchError(error => {
-          const message = error.error?.error?.message || 'Error al registrar usuario';
+          const message = error.error?.error?.message || error.error?.message || 'Error al registrar usuario';
           return throwError(() => new Error(message));
         })
       );
   }
 
   logout(): Observable<any> {
-    const refreshToken = localStorage.getItem(this.refreshTokenKey);
-    this.clearSession();
+    const refreshToken = this.getRefreshToken();
+    this.clearSession(); // Limpiamos la sesión local primero para respuesta inmediata en UI
 
     if (refreshToken) {
       return this.http.post(`${this.apiUrl}/api/auth/logout`, { refreshToken })
-        .pipe(catchError(() => []));
+        .pipe(catchError(() => of(null)));
     }
-    return new Observable(observer => observer.complete());
+    return of(null);
   }
 
   refreshAccessToken(refreshToken: string): Observable<AuthResponse> {
@@ -102,13 +105,14 @@ export class AuthService {
   private saveSession(response: AuthResponse): void {
     localStorage.setItem(this.accessTokenKey, response.accessToken);
     localStorage.setItem(this.refreshTokenKey, response.refreshToken);
-    this.currentUserSubject.next(response.user);
+    this.setCurrentUser(response.user);
     this.isLoggedInSubject.next(true);
   }
 
   clearSession(): void {
     localStorage.removeItem(this.accessTokenKey);
     localStorage.removeItem(this.refreshTokenKey);
+    localStorage.removeItem(this.userStorageKey);
     this.currentUserSubject.next(null);
     this.isLoggedInSubject.next(false);
   }
@@ -122,10 +126,25 @@ export class AuthService {
   }
 
   getCurrentUser(): User | null {
-    return this.currentUserSubject.value;
+    return this.currentUserSubject.value || this.getStoredUser();
   }
 
   getUserRole(): string | null {
     return this.getCurrentUser()?.role || null;
+  }
+
+  private setCurrentUser(user: User): void {
+    localStorage.setItem(this.userStorageKey, JSON.stringify(user));
+    this.currentUserSubject.next(user);
+  }
+
+  private getStoredUser(): User | null {
+    const userStr = localStorage.getItem(this.userStorageKey);
+    if (!userStr) return null;
+    try {
+      return JSON.parse(userStr) as User;
+    } catch {
+      return null;
+    }
   }
 }
