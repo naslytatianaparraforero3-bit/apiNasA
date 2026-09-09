@@ -1,13 +1,16 @@
-import { HttpInterceptorFn, HttpErrorResponse } from '@angular/common/http';
+import { HttpInterceptorFn, HttpErrorResponse, HttpRequest, HttpHandlerFn, HttpEvent } from '@angular/common/http';
 import { inject } from '@angular/core';
-import { catchError, switchMap, filter, take, throwError } from 'rxjs';
+import { catchError, switchMap, filter, take, throwError, Observable } from 'rxjs';
 import { BehaviorSubject } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 
 let isRefreshing = false;
 const refreshTokenSubject = new BehaviorSubject<string | null>(null);
 
-export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
+export const tokenRefreshInterceptor: HttpInterceptorFn = (
+  req: HttpRequest<unknown>, 
+  next: HttpHandlerFn
+): Observable<HttpEvent<unknown>> => {
   const authService = inject(AuthService);
 
   return next(req).pipe(
@@ -20,7 +23,11 @@ export const tokenRefreshInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-function handle401Error(req: any, next: any, authService: AuthService) {
+function handle401Error(
+  req: HttpRequest<unknown>, 
+  next: HttpHandlerFn, 
+  authService: AuthService
+): Observable<HttpEvent<unknown>> {
   if (!isRefreshing) {
     isRefreshing = true;
     refreshTokenSubject.next(null);
@@ -50,7 +57,7 @@ function handle401Error(req: any, next: any, authService: AuthService) {
     );
   } else {
     return refreshTokenSubject.pipe(
-      filter(token => token !== null),
+      filter((token): token is string => token !== null),
       take(1),
       switchMap(token => {
         return next(req.clone({

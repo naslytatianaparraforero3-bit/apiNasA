@@ -1,0 +1,72 @@
+.ticket-detail-container {
+  padding: 1.5rem;
+  background: #ffffff;
+  border-radius: 8px;
+
+  .back-link {
+    display: inline-block;
+    margin-bottom: 0.5rem;
+    color: #3b82f6;
+    text-decoration: none;
+  }
+
+  .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .ticket-info {
+    .description {
+      background: #f8fafc;
+      padding: 1rem;
+      border-radius: 6px;
+      color: #334155;
+    }
+
+    .meta {
+      display: flex;
+      gap: 2rem;
+      margin-top: 1rem;
+      color: #64748b;
+    }
+  }
+
+  .comments-section {
+    margin-top: 1.5rem;
+
+    .add-comment {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+
+      textarea {
+        padding: 0.75rem;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+      }
+
+      button {
+        align-self: flex-end;
+      }
+    }
+
+    .comment-card {
+      padding: 1rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+
+      .comment-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 0.5rem;
+        color: #475569;
+      }
+    }
+  }
+}

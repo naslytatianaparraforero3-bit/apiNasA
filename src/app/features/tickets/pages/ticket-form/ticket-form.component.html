@@ -1,0 +1,40 @@
+<div class="form-container">
+  <h2>Crear Nuevo Ticket</h2>
+
+  <div *ngIf="error" class="alert alert-danger">{{ error }}</div>
+
+  <form [formGroup]="ticketForm" (ngSubmit)="onSubmit()">
+    <div class="form-group">
+      <label for="title">Título</label>
+      <input id="title" type="text" formControlName="title" placeholder="Resumen del problema" />
+      <span *ngIf="ticketForm.get('title')?.touched && ticketForm.get('title')?.invalid" class="error-msg">
+        El título es requerido (mínimo 5 caracteres).
+      </span>
+    </div>
+
+    <div class="form-group">
+      <label for="priority">Prioridad</label>
+      <select id="priority" formControlName="priority">
+        <option value="low">Baja</option>
+        <option value="medium">Media</option>
+        <option value="high">Alta</option>
+        <option value="urgent">Urgente</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label for="description">Descripción Detallada</label>
+      <textarea id="description" formControlName="description" rows="5" placeholder="Explica detalladamente la situación..."></textarea>
+      <span *ngIf="ticketForm.get('description')?.touched && ticketForm.get('description')?.invalid" class="error-msg">
+        La descripción es requerida (mínimo 10 caracteres).
+      </span>
+    </div>
+
+    <div class="actions">
+      <a routerLink="/tickets" class="btn btn-secondary">Cancelar</a>
+      <button type="submit" class="btn btn-primary" [disabled]="ticketForm.invalid || loading">
+        {{ loading ? 'Guardando...' : 'Crear Ticket' }}
+      </button>
+    </div>
+  </form>
+</div>

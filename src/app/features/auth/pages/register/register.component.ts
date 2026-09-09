@@ -1,10 +1,13 @@
 import { Component } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { CommonModule } from '@angular/common';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth.service';
 
 @Component({
   selector: 'app-register',
+  standalone: true,
+  imports: [CommonModule, ReactiveFormsModule, RouterModule],
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
@@ -27,7 +30,10 @@ export class RegisterComponent {
   }
 
   onSubmit(): void {
-    if (this.registerForm.invalid) return;
+    if (this.registerForm.invalid) {
+      this.registerForm.markAllAsTouched();
+      return;
+    }
 
     this.loading = true;
     this.errorMessage = '';
@@ -41,7 +47,7 @@ export class RegisterComponent {
         this.successMessage = 'Cuenta creada exitosamente. Redirigiendo...';
         setTimeout(() => this.router.navigate(['/tickets']), 1500);
       },
-      error: (err) => {
+      error: (err: { message?: string }) => {
         this.loading = false;
         this.errorMessage = err.message || 'Error al crear la cuenta';
       }

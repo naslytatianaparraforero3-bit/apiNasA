@@ -1,0 +1,51 @@
+<div class="ticket-detail-container" *ngIf="ticket">
+  <div class="header">
+    <div>
+      <a routerLink="/tickets" class="back-link">← Volver a la lista</a>
+      <h2>{{ ticket.title }}</h2>
+    </div>
+    
+    <div class="actions" *ngIf="userRole === 'admin' || userRole === 'agent'">
+      <label>Cambiar Estado:</label>
+      <select [ngModel]="ticket.status" (ngModelChange)="updateStatus($event)">
+        <option value="open">Abierto</option>
+        <option value="in_progress">En Progreso</option>
+        <option value="resolved">Resuelto</option>
+        <option value="closed">Cerrado</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="ticket-info">
+    <p><strong>Descripción:</strong></p>
+    <p class="description">{{ ticket.description }}</p>
+    <div class="meta">
+      <span><strong>Prioridad:</strong> {{ ticket.priority }}</span>
+      <span><strong>Estado:</strong> {{ ticket.status }}</span>
+      <span><strong>Creado:</strong> {{ ticket.createdAt | date:'medium' }}</span>
+    </div>
+  </div>
+
+  <hr />
+
+  <div class="comments-section">
+    <h3>Comentarios</h3>
+
+    <div class="add-comment">
+      <textarea [(ngModel)]="newComment" placeholder="Escribe un comentario..." rows="3"></textarea>
+      <button class="btn btn-primary" (click)="submitComment()" [disabled]="!newComment.trim()">
+        Enviar Comentario
+      </button>
+    </div>
+
+    <div class="comments-list">
+      <div *ngFor="let comment of comments" class="comment-card">
+        <div class="comment-header">
+          <strong>{{ comment.author?.name || 'Usuario' }}</strong>
+          <small>{{ comment.createdAt | date:'short' }}</small>
+        </div>
+        <p class="comment-body">{{ comment.body }}</p>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,15 @@
+<div class="home-container">
+  <div class="hero-section">
+    <h1>Bienvenido al Sistema de Gestión de Tickets</h1>
+    <p>Plataforma centralizada para la administración y seguimiento de solicitudes de soporte.</p>
+
+    <div class="cta-buttons" *ngIf="!isLoggedIn">
+      <a routerLink="/auth/login" class="btn btn-primary">Iniciar Sesión</a>
+      <a routerLink="/auth/register" class="btn btn-secondary">Registrarse</a>
+    </div>
+
+    <div class="cta-buttons" *ngIf="isLoggedIn">
+      <a routerLink="/tickets" class="btn btn-primary">Ir a Mis Tickets</a>
+    </div>
+  </div>
+</div>

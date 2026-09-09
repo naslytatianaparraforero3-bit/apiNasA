@@ -1,2 +1,42 @@
-/* You can add global styles to this file, and also import other style files */
-/* lemon
+/* Reseteo global de márgenes y caja */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background-color: #f8fafc;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+/* Tipografía global */
+h1, h2, h3, h4, h5, h6 {
+  color: #0f172a;
+  font-weight: 600;
+}
+
+/* Enlaces globales */
+a {
+  color: #2563eb;
+  text-decoration: none;
+  
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* Controles de formulario compartidos */
+input, select, textarea, button {
+  font-family: inherit;
+  font-size: 1rem;
+}
+
+button {
+  cursor: pointer;
+}
