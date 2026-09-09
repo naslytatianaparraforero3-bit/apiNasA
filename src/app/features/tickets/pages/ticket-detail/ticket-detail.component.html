@@ -6,8 +6,12 @@
     </div>
     
     <div class="actions" *ngIf="userRole === 'admin' || userRole === 'agent'">
-      <label>Cambiar Estado:</label>
-      <select [ngModel]="ticket.status" (ngModelChange)="updateStatus($event)">
+      <label for="statusSelect">Cambiar Estado:</label>
+      <select 
+        id="statusSelect"
+        title="Cambiar estado del ticket"
+        [ngModel]="ticket.status" 
+        (ngModelChange)="updateStatus($event)">
         <option value="open">Abierto</option>
         <option value="in_progress">En Progreso</option>
         <option value="resolved">Resuelto</option>
@@ -31,13 +35,6 @@
   <div class="comments-section">
     <h3>Comentarios</h3>
 
-    <div class="add-comment">
-      <textarea [(ngModel)]="newComment" placeholder="Escribe un comentario..." rows="3"></textarea>
-      <button class="btn btn-primary" (click)="submitComment()" [disabled]="!newComment.trim()">
-        Enviar Comentario
-      </button>
-    </div>
-
     <div class="comments-list">
       <div *ngFor="let comment of comments" class="comment-card">
         <div class="comment-header">
@@ -46,6 +43,17 @@
         </div>
         <p class="comment-body">{{ comment.body }}</p>
       </div>
+      <p *ngIf="!comments || comments.length === 0" class="no-comments">
+        Aún no hay comentarios en este ticket.
+      </p>
+    </div>
+
+    <!-- Formulario para agregar un nuevo comentario -->
+    <div class="add-comment">
+      <textarea [(ngModel)]="newComment" placeholder="Escribe un comentario..." rows="3"></textarea>
+      <button class="btn btn-primary" (click)="submitComment()" [disabled]="!newComment.trim()">
+        Enviar Comentario
+      </button>
     </div>
   </div>
 </div>
