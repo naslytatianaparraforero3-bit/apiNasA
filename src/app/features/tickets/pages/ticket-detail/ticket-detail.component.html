@@ -1,18 +1,17 @@
-<div *ngIf="loading" class="loading-spinner">
-  <p>Cargando información del ticket...</p>
+<div *ngIf="loading" class="loading-state">
+  <p>Cargando ticket...</p>
 </div>
 
-<div *ngIf="error" class="error-alert">
+<div *ngIf="error" class="error-message">
   <p>{{ error }}</p>
-  <a routerLink="/tickets" class="back-link">← Volver a la lista</a>
+  <a routerLink="/tickets">← Volver a la lista</a>
 </div>
 
-<!-- Contenido Principal -->
 <div class="ticket-detail-container" *ngIf="!loading && ticket">
   <div class="header">
     <div>
       <a routerLink="/tickets" class="back-link">← Volver a la lista</a>
-      <h2>{{ ticket.title }}</h2>
+      <h2>{{ ticket.title || 'Sin Título' }}</h2>
     </div>
     
     <div class="actions" *ngIf="userRole === 'admin' || userRole === 'agent'">
@@ -32,10 +31,10 @@
 
   <div class="ticket-info">
     <p><strong>Descripción:</strong></p>
-    <p class="description">{{ ticket.description }}</p>
+    <p class="description">{{ ticket.description || 'Sin descripción proporcionada.' }}</p>
     <div class="meta">
-      <span><strong>Prioridad:</strong> {{ ticket.priority }}</span>
-      <span><strong>Estado:</strong> {{ ticket.status }}</span>
+      <span><strong>Prioridad:</strong> {{ ticket.priority || 'N/A' }}</span>
+      <span><strong>Estado:</strong> {{ ticket.status || 'open' }}</span>
       <span><strong>Creado:</strong> {{ ticket.createdAt | date:'medium' }}</span>
     </div>
   </div>
@@ -48,27 +47,19 @@
     <div class="comments-list">
       <div *ngFor="let comment of comments" class="comment-card">
         <div class="comment-header">
-          <strong>{{ comment.author?.name || 'Usuario' }}</strong>
+          <strong>{{ comment.author || 'Usuario' }}</strong>
           <small>{{ comment.createdAt | date:'short' }}</small>
         </div>
         <p class="comment-body">{{ comment.body }}</p>
       </div>
-      
       <p *ngIf="!comments || comments.length === 0" class="no-comments">
         Aún no hay comentarios en este ticket.
       </p>
     </div>
 
     <div class="add-comment">
-      <textarea 
-        [(ngModel)]="newComment" 
-        placeholder="Escribe un comentario..." 
-        rows="3">
-      </textarea>
-      <button 
-        class="btn btn-primary" 
-        (click)="submitComment()" 
-        [disabled]="!newComment.trim()">
+      <textarea [(ngModel)]="newComment" placeholder="Escribe un comentario..." rows="3"></textarea>
+      <button class="btn btn-primary" (click)="submitComment()" [disabled]="!newComment.trim()">
         Enviar Comentario
       </button>
     </div>
