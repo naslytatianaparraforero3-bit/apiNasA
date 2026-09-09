@@ -1,8 +1,13 @@
 {
+  "version": 2,
   "rewrites": [
     {
-      "source": "/api/(.*)",
-      "destination": "https://sla-api.alejogiraldo.dev/api/$1"
+      "source": "/api/:path*",
+      "destination": "https://sla-api.areasoftccyt.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

@@ -13,7 +13,7 @@ export interface User {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'https://sla-api.alejogiraldo.dev';
+  private apiUrl = 'https://sla-api.areasoftccyt.com/api/auth';
 
   private currentUserSubject = new BehaviorSubject<User | null>(null);
   public currentUser$ = this.currentUserSubject.asObservable();
@@ -24,8 +24,12 @@ export class AuthService {
   constructor(private http: HttpClient) {
     const savedUser = localStorage.getItem('currentUser');
     if (savedUser) {
-      this.currentUserSubject.next(JSON.parse(savedUser));
-      this.isLoggedInSubject.next(true);
+      try {
+        this.currentUserSubject.next(JSON.parse(savedUser));
+        this.isLoggedInSubject.next(true);
+      } catch (e) {
+        this.clearSession();
+      }
     }
   }
 
@@ -33,18 +37,22 @@ export class AuthService {
     return this.isLoggedInSubject.value;
   }
 
-  login(email: string, password?: string): Observable<any> {
-    const body = typeof email === 'object' ? email : { email, password };
+  login(credentials: { email: string; password?: string } | string, password?: string): Observable<any> {
+    const body = typeof credentials === 'object' ? credentials : { email: credentials, password };
+    
     return this.http.post<any>(`${this.apiUrl}/login`, body).pipe(
       tap(response => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
-          if (response.refreshToken) {
-            localStorage.setItem('refreshToken', response.refreshToken);
-          }
-          if (response.user) {
-            localStorage.setItem('currentUser', JSON.stringify(response.user));
-            this.currentUserSubject.next(response.user);
+        const data = response.data || response;
+        const token = data.token || response.token;
+        const refreshToken = data.refreshToken || response.refreshToken;
+        const user = data.user || response.user;
+
+        if (token) {
+          localStorage.setItem('token', token);
+          if (refreshToken) localStorage.setItem('refreshToken', refreshToken);
+          if (user) {
+            localStorage.setItem('currentUser', JSON.stringify(user));
+            this.currentUserSubject.next(user);
           }
           this.isLoggedInSubject.next(true);
         }
@@ -54,25 +62,6 @@ export class AuthService {
 
   register(userData: any): Observable<any> {
     return this.http.post<any>(`${this.apiUrl}/register`, userData);
-  }
-
-  getAccessToken(): string | null {
-    return localStorage.getItem('token');
-  }
-
-  getRefreshToken(): string | null {
-    return localStorage.getItem('refreshToken');
-  }
-
-  refreshAccessToken(refreshToken?: string): Observable<any> {
-    const tokenToUse = refreshToken || this.getRefreshToken();
-    return this.http.post<any>(`${this.apiUrl}/refresh`, { refreshToken: tokenToUse }).pipe(
-      tap(response => {
-        if (response && response.token) {
-          localStorage.setItem('token', response.token);
-        }
-      })
-    );
   }
 
   getUserRole(): string | null {
@@ -86,6 +75,12 @@ export class AuthService {
   }
 
   logout(): void {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (refreshToken) {
+      this.http.post(`${this.apiUrl}/logout`, { refreshToken }).subscribe({
+        error: () => {}
+      });
+    }
     this.clearSession();
   }
 

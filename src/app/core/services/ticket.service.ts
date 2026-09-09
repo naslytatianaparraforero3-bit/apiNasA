@@ -12,7 +12,8 @@ export enum TicketStatus {
 export enum Priority {
   LOW = 'LOW',
   MEDIUM = 'MEDIUM',
-  HIGH = 'HIGH'
+  HIGH = 'HIGH',
+  URGENT = 'URGENT'
 }
 
 export interface Comment {
@@ -40,15 +41,13 @@ export interface TicketListResponse {
     limit: number;
     totalPages: number;
   };
-  tickets?: Ticket[];
-  total?: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class TicketService {
-  private apiUrl = 'https://sla-api.alejogiraldo.dev';
+  private apiUrl = 'https://sla-api.areasoftccyt.com/api/tickets';
 
   constructor(private http: HttpClient) {}
 

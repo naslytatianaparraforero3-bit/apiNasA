@@ -13,9 +13,9 @@ import { User } from '../../../../core/services/auth.service';
 })
 export class UserListComponent implements OnInit {
   users: User[] = [];
+  updatingUserId: string | number | null = null;
   loading = false;
   error = '';
-  updatingUserId: string | number | null = null;
 
   constructor(private userService: UserService) {}
 
@@ -25,34 +25,28 @@ export class UserListComponent implements OnInit {
 
   loadUsers(): void {
     this.loading = true;
-    this.error = '';
-
     this.userService.getUsers().subscribe({
-      next: (data: User[]) => {
+      next: (data) => {
         this.users = data;
         this.loading = false;
       },
-      error: (err: any) => {
-        this.error = err.message || 'Error al obtener la lista de usuarios';
+      error: (err) => {
+        this.error = err.error?.message || 'Error al cargar los usuarios';
         this.loading = false;
       }
     });
   }
 
-  onRoleChange(user: User, newRole: 'admin' | 'agent' | 'client'): void {
-    if (user.role === newRole) return;
-
+  onRoleChange(user: User, newRole: string): void {
     this.updatingUserId = user.id;
-
     this.userService.changeRole(user.id, newRole).subscribe({
-      next: (updatedUser: User) => {
-        user.role = updatedUser.role;
+      next: () => {
+        user.role = newRole;
         this.updatingUserId = null;
       },
-      error: (err: any) => {
-        this.error = err.message || 'No se pudo actualizar el rol del usuario';
+      error: (err) => {
+        alert(err.error?.message || 'Error al cambiar el rol');
         this.updatingUserId = null;
-        this.loadUsers();
       }
     });
   }
