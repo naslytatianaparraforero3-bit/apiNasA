@@ -1,17 +1,34 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 
+import { AuthGuard } from './core/guards/auth.guard';
+import { roleGuard } from './core/guards/role.guard';
+
+import { LoginComponent } from './features/auth/pages/login/login.component';
+import { TicketListComponent } from './features/tickets/pages/ticket-list/ticket-list.component';
+import { TicketDetailComponent } from './features/tickets/pages/ticket-detail/ticket-detail.component';
+import { UserListComponent } from './features/users/pages/user-list/user-list.component';
+
 const routes: Routes = [
-  {
-    path: 'auth',
-    loadChildren: () => import('./features/auth/auth.module').then(m => m.AuthModule)
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
+  { path: 'login', component: LoginComponent },
+  { 
+    path: 'tickets', 
+    component: TicketListComponent, 
+    canActivate: [AuthGuard] 
   },
-  {
-    path: 'tickets',
-    loadChildren: () => import('./features/tickets/tickets.module').then(m => m.TicketsModule)
+  { 
+    path: 'tickets/:id', 
+    component: TicketDetailComponent, 
+    canActivate: [AuthGuard] 
   },
-  { path: '', redirectTo: 'auth/login', pathMatch: 'full' },
-  { path: '**', redirectTo: 'auth/login' }
+  { 
+    path: 'users', 
+    component: UserListComponent, 
+    canActivate: [AuthGuard, roleGuard], 
+    data: { role: 'admin' } 
+  },
+  { path: '**', redirectTo: 'tickets' }
 ];
 
 @NgModule({
