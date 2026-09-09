@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { TicketService, Ticket, Comment, TicketStatus } from '../../../../core/services/ticket.service';
 import { AuthService, User } from '../../../../core/services/auth.service';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'app-ticket-detail',
@@ -12,13 +13,16 @@ import { AuthService, User } from '../../../../core/services/auth.service';
   templateUrl: './ticket-detail.component.html',
   styleUrls: ['./ticket-detail.component.scss']
 })
-export class TicketDetailComponent implements OnInit {
+export class TicketDetailComponent implements OnInit, OnDestroy {
   ticket: Ticket | null = null;
   comments: Comment[] = [];
   currentUser: User | null = null;
   loading = false;
   error = '';
   newComment = '';
+  ticketId: string | number | null = null;
+
+  private userSub!: Subscription;
 
   constructor(
     private route: ActivatedRoute,
@@ -31,36 +35,47 @@ export class TicketDetailComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.authService.currentUser$.subscribe((user: User | null) => {
+    this.userSub = this.authService.currentUser$.subscribe((user: User | null) => {
       this.currentUser = user;
     });
 
-    const ticketId = this.route.snapshot.paramMap.get('id');
-    if (ticketId) {
-      this.loadTicketDetails(ticketId);
-    }
+    this.route.paramMap.subscribe(params => {
+      const idParam = params.get('id');
+      if (idParam) {
+        this.ticketId = isNaN(Number(idParam)) ? idParam : Number(idParam);
+        this.loadTicketDetails(this.ticketId);
+      }
+    });
   }
 
-  loadTicketDetails(id: string): void {
+  loadTicketDetails(id: string | number): void {
     this.loading = true;
     this.error = '';
 
-    this.ticketService.getTicket(id).subscribe({
+    this.ticketService.getTicket(id as any).subscribe({
       next: (ticket: Ticket) => {
+        console.log('Ticket cargado exitosamente:', ticket);
         this.ticket = ticket;
         this.loading = false;
       },
-      error: (err: { message?: string }) => {
-        this.error = err.message || 'Error al cargar el ticket';
+      error: (err: any) => {
+        console.error('Error al obtener el ticket:', err);
+        this.error = 'No se pudo cargar la información del ticket.';
         this.loading = false;
       }
     });
 
-    this.ticketService.getComments(id).subscribe({
+    this.loadComments(id);
+  }
+
+  loadComments(id: string | number): void {
+    this.ticketService.getComments(id as any).subscribe({
       next: (comments: Comment[]) => {
-        this.comments = comments;
+        console.log('Comentarios cargados:', comments);
+        this.comments = comments || [];
       },
-      error: () => {
+      error: (err: any) => {
+        console.error('Error al obtener comentarios:', err);
       }
     });
   }
@@ -68,13 +83,21 @@ export class TicketDetailComponent implements OnInit {
   submitComment(): void {
     if (!this.newComment.trim() || !this.ticket) return;
 
-    this.ticketService.addComment(this.ticket.id, this.newComment).subscribe({
+    const commentText = this.newComment.trim();
+
+    this.ticketService.addComment(this.ticket.id, commentText).subscribe({
       next: (comment: Comment) => {
-        this.comments.push(comment);
+        console.log('Comentario enviado:', comment);
+        if (comment) {
+          this.comments.push(comment);
+        } else if (this.ticketId) {
+          this.loadComments(this.ticketId);
+        }
         this.newComment = '';
       },
-      error: (err: { message?: string }) => {
-        this.error = err.message || 'Error al agregar comentario';
+      error: (err: any) => {
+        console.error('Error al agregar comentario:', err);
+        alert('No se pudo enviar el comentario. Revisa la consola.');
       }
     });
   }
@@ -86,9 +109,15 @@ export class TicketDetailComponent implements OnInit {
       next: (updated: Ticket) => {
         this.ticket = updated;
       },
-      error: (err: { message?: string }) => {
-        this.error = err.message || 'Error al actualizar estado';
+      error: (err: any) => {
+        console.error('Error al actualizar estado:', err);
       }
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.userSub) {
+      this.userSub.unsubscribe();
+    }
   }
 }
