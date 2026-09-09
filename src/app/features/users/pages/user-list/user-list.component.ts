@@ -15,7 +15,7 @@ export class UserListComponent implements OnInit {
   users: User[] = [];
   loading = false;
   error = '';
-  updatingUserId: string | null = null;
+  updatingUserId: string | number | null = null;
 
   constructor(private userService: UserService) {}
 

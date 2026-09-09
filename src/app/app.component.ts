@@ -1,11 +1,13 @@
 import { Component } from '@angular/core';
+import { AuthService } from './core/services/auth.service';
 
 @Component({
   selector: 'app-root',
-  standalone: false,
   templateUrl: './app.component.html',
   styleUrls: ['./app.component.scss']
 })
 export class AppComponent {
-  title = 'tickets-frontend';
+  title = 'mi-aplicacion';
+
+  constructor(public authService: AuthService) {}
 }

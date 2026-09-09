@@ -1,90 +1,96 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { environment } from '../../../environments/environment';
 
-export type TicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+export enum TicketStatus {
+  OPEN = 'OPEN',
+  IN_PROGRESS = 'IN_PROGRESS',
+  RESOLVED = 'RESOLVED',
+  CLOSED = 'CLOSED'
+}
+
+export enum Priority {
+  LOW = 'LOW',
+  MEDIUM = 'MEDIUM',
+  HIGH = 'HIGH'
+}
+
+export interface Comment {
+  id: string | number;
+  content: string;
+  author: string;
+  createdAt: string;
+}
 
 export interface Ticket {
   id: string | number;
   title: string;
   description: string;
-  priority: string;
   status: TicketStatus;
-  createdAt: string;
+  priority: Priority;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
-export interface Comment {
-  id: string | number;
-  body: string;
-  author: { name: string } | string;
-  createdAt: string;
+export interface TicketListResponse {
+  data: Ticket[];
+  meta?: {
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  };
+  tickets?: Ticket[];
+  total?: number;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class TicketService {
-  private readonly apiUrl = `${environment.apiUrl}/api/tickets`;
+  private apiUrl = 'https://sla-api.alejogiraldo.dev';
 
   constructor(private http: HttpClient) {}
 
+  getTickets(status?: any, priority?: any, page?: number, limit?: number): Observable<TicketListResponse> {
+    let params = new HttpParams();
+
+    if (typeof status === 'object' && status !== null) {
+      Object.keys(status).forEach(key => {
+        if (status[key] !== undefined && status[key] !== null) {
+          params = params.set(key, status[key]);
+        }
+      });
+    } else {
+      if (status) params = params.set('status', status);
+      if (priority) params = params.set('priority', priority);
+      if (page) params = params.set('page', page.toString());
+      if (limit) params = params.set('limit', limit.toString());
+    }
+
+    return this.http.get<TicketListResponse>(this.apiUrl, { params });
+  }
+
   getTicket(id: string | number): Observable<Ticket> {
-    return this.http.get<any>(`${this.apiUrl}/${id}`).pipe(
-      map(res => {
-        const data = res?.data || res?.ticket || res;
-        
-        return {
-          id: data?.id || id,
-          title: data?.title || data?.titulo || data?.subject || 'Sin Título',
-          description: data?.description || data?.descripcion || data?.details || 'Sin descripción',
-          priority: data?.priority || data?.prioridad || 'N/A',
-          status: (data?.status || data?.estado || 'open') as TicketStatus,
-          createdAt: data?.createdAt || data?.created_at || data?.date || new Date().toISOString()
-        };
-      })
-    );
+    return this.http.get<Ticket>(`${this.apiUrl}/${id}`);
+  }
+
+  createTicket(ticketData: any): Observable<Ticket> {
+    return this.http.post<Ticket>(this.apiUrl, ticketData);
+  }
+
+  updateTicket(id: string | number, ticketData: any): Observable<Ticket> {
+    return this.http.put<Ticket>(`${this.apiUrl}/${id}`, ticketData);
   }
 
   getComments(ticketId: string | number): Observable<Comment[]> {
-    return this.http.get<any>(`${this.apiUrl}/${ticketId}/comments`).pipe(
-      map(res => {
-        // Manejar respuestas paginadas o envueltas (ej: res.content, res.data, o Array directo)
-        const list = Array.isArray(res) ? res : (res?.data || res?.content || res?.comments || []);
-        
-        return list.map((c: any) => ({
-          id: c.id,
-          body: c.body || c.content || c.message || c.text || '',
-          author: c.author?.name ? c.author : (c.author || c.user?.name || c.user || 'Usuario'),
-          createdAt: c.createdAt || c.created_at || c.date || new Date().toISOString()
-        }));
-      })
-    );
+    return this.http.get<Comment[]>(`${this.apiUrl}/${ticketId}/comments`);
   }
 
-  addComment(ticketId: string | number, text: string): Observable<Comment> {
-    const payload = {
-      body: text,
-      content: text,
-      message: text,
-      ticketId: ticketId
-    };
-
-    return this.http.post<any>(`${this.apiUrl}/${ticketId}/comments`, payload).pipe(
-      map(res => {
-        const c = res?.data || res;
-        return {
-          id: c?.id || Date.now(),
-          body: c?.body || c?.content || c?.message || text,
-          author: c?.author?.name ? c.author : (c?.author || c?.user || 'Tú'),
-          createdAt: c?.createdAt || c?.created_at || new Date().toISOString()
-        };
-      })
+  addComment(ticketId: string | number, commentData: any): Observable<Comment> {
+    return this.http.post<Comment>(
+      `${this.apiUrl}/${ticketId}/comments`,
+      typeof commentData === 'string' ? { content: commentData } : commentData
     );
-  }
-
-  updateTicket(ticketId: string | number, payload: Partial<Ticket>): Observable<Ticket> {
-    return this.http.patch<Ticket>(`${this.apiUrl}/${ticketId}`, payload);
   }
 }

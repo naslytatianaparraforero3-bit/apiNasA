@@ -1,53 +1,99 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Router } from '@angular/router';
-import { environment } from '../../../environments/environment';
+import { BehaviorSubject, Observable, tap } from 'rxjs';
 
 export interface User {
-  id: string;
-  name: string;
+  id: string | number;
   email: string;
-  role: 'admin' | 'agent' | 'client';
+  name?: string;
+  role?: string;
 }
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private readonly apiUrl = `${environment.apiUrl}/auth`;
+  private apiUrl = 'https://sla-api.alejogiraldo.dev';
 
-  constructor(private http: HttpClient, private router: Router) {}
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
+  public currentUser$ = this.currentUserSubject.asObservable();
 
-  getAccessToken(): string | null {
-    return localStorage.getItem('access_token');
-  }
+  private isLoggedInSubject = new BehaviorSubject<boolean>(false);
+  public isLoggedIn$ = this.isLoggedInSubject.asObservable();
 
-  getUserRole(): string {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user?.role || '';
-  }
-
-  getUserName(): string {
-    const user = JSON.parse(localStorage.getItem('user') || '{}');
-    return user?.name || user?.email || 'Usuario';
+  constructor(private http: HttpClient) {
+    const savedUser = localStorage.getItem('currentUser');
+    if (savedUser) {
+      this.currentUserSubject.next(JSON.parse(savedUser));
+      this.isLoggedInSubject.next(true);
+    }
   }
 
   isLoggedIn(): boolean {
-    return !!this.getAccessToken();
+    return this.isLoggedInSubject.value;
+  }
+
+  login(email: string, password?: string): Observable<any> {
+    const body = typeof email === 'object' ? email : { email, password };
+    return this.http.post<any>(`${this.apiUrl}/login`, body).pipe(
+      tap(response => {
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+          if (response.refreshToken) {
+            localStorage.setItem('refreshToken', response.refreshToken);
+          }
+          if (response.user) {
+            localStorage.setItem('currentUser', JSON.stringify(response.user));
+            this.currentUserSubject.next(response.user);
+          }
+          this.isLoggedInSubject.next(true);
+        }
+      })
+    );
+  }
+
+  register(userData: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/register`, userData);
+  }
+
+  getAccessToken(): string | null {
+    return localStorage.getItem('token');
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem('refreshToken');
+  }
+
+  refreshAccessToken(refreshToken?: string): Observable<any> {
+    const tokenToUse = refreshToken || this.getRefreshToken();
+    return this.http.post<any>(`${this.apiUrl}/refresh`, { refreshToken: tokenToUse }).pipe(
+      tap(response => {
+        if (response && response.token) {
+          localStorage.setItem('token', response.token);
+        }
+      })
+    );
+  }
+
+  getUserRole(): string | null {
+    const user = this.currentUserSubject.value;
+    return user ? user.role || null : null;
+  }
+
+  getUserName(): string {
+    const user = this.currentUserSubject.value;
+    return user ? user.name || user.email : '';
   }
 
   logout(): void {
-    const refreshToken = localStorage.getItem('refresh_token');
-    this.http.post(`${this.apiUrl}/logout`, { refreshToken }).subscribe({
-      next: () => this.clearSession(),
-      error: () => this.clearSession()
-    });
+    this.clearSession();
   }
 
-  private clearSession(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-    localStorage.removeItem('user');
-    this.router.navigate(['/login']);
+  clearSession(): void {
+    localStorage.removeItem('token');
+    localStorage.removeItem('refreshToken');
+    localStorage.removeItem('currentUser');
+    this.currentUserSubject.next(null);
+    this.isLoggedInSubject.next(false);
   }
 }
